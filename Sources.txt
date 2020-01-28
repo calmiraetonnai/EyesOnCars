@@ -1,2 +1,14 @@
 ALGO DE SUPPRESSION :
   http://documents.irevues.inist.fr/bitstream/handle/2042/2433/11%E2%80%A2Chateau.pdf?sequence=3
+  
+OUVERTURE, LECTURE & OPERATIONS DE BASE SUR LES IMAGES EN OPENCV :
+  http://www.python-simple.com/python-opencv/lecture-sauvegarde-image.php
+  
+HSV :
+  https://www.lifewire.com/what-is-hsv-in-design-1078068
+  https://fr.wikipedia.org/wiki/Teinte_Saturation_Valeur
+
+DETECTION
+  https://pymotion.com/detecter-source-lumineuse-image/
+  https://pymotion.com/reconnaissance-de-couleurs/
+  https://pymotion.com/reconnaissance-de-formes/
