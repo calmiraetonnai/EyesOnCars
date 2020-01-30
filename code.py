@@ -20,6 +20,12 @@ def lighting_image(image_name):
     image_hsv = cv.cvtColor(image,cv.COLOR_BGR2HSV) # passage en hsv
     ret,seuil = cv.threshold(image_hsv[:,:,2],minV,maxV,cv.THRESH_BINARY)  # seuillage sur la brillance
     cv.imwrite("lighting_image_"+image_name, seuil) # enregistrement image
+    
+ def filtrage_gaussien(image_name):
+    img = cv.imread(image_name)
+    h, w, nbc = img.shape
+    newImg = cv.GaussianBlur(img, (w-2, h-2), 10)
+    cv.imwrite("image_gaussien_"+image_name, newImg)
 
 #lighting_image("mini_cooper_triangle.png")
 #lighting_image("mini_cooper_fleche.png")
