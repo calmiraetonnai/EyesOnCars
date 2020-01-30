@@ -1,0 +1,7 @@
+HISTORIQUE DES TECHNOS UTILISEES :
+  - Filtrage Médian
+  - Soustraction de fond
+  
+  
+HISTORIQUE DES TECHNOS NON UTILISEES & RAISONS :
+  - Filtrage Moyen de l'image très instable ( augmente plus le bruit blanc qu'il ne le diminue )
