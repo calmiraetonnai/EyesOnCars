@@ -1,58 +1,104 @@
 import numpy as np
-import matplotlib.image as mpimg
-from PIL import Image
 import cv2 as cv
 
-def NivDeGris(image_name): # k est la valeur de seuil entre 0 et 255
-    img = Image.open(image_name) # on ouvre l'image
-    grisimg = img.convert('L') # conversion en niveau de gris
-    grisimg.show()
+class Image_Treatment():
 
+    def __init__(self, bg):
+        self.background = cv.imread(bg) # ouverture image ( une nparray )
+        self.current_state = None # Initialisation du fond
+        self.original_state = None
+        self.processed = []
 
-def open_an_image(image_name):
-    img = Image.open(image_name) # on ouvre l'image
-    img.show()
+    def reset(self):
+        self.current_state = self.original_state # on reinitialise tout les traitements faits
 
+    def get_state(self, image_name): # OK
+        """ Attribut une image ( équivalent de l'etat courant du systeme ) """
+        self.current_state = cv.imread(image_name)
+        self.original_state = cv.imread(image_name)
 
-def lighting_image(image_name):
-    minV, maxV = 240, 255 # intervalle de valeurs pour la "brillance" de la couleur
-    image = cv.imread(image_name) # ouverture image ( une nparray )
-    image_hsv = cv.cvtColor(image,cv.COLOR_BGR2HSV) # passage en hsv
-    ret,seuil = cv.threshold(image_hsv[:,:,2],minV,maxV,cv.THRESH_BINARY)  # seuillage sur la brillance
-    cv.imwrite("lighting_image_"+image_name, seuil) # enregistrement image
-    
- def filtrage_gaussien(image_name):
-    img = cv.imread(image_name)
-    h, w, nbc = img.shape
-    newImg = cv.GaussianBlur(img, (w-2, h-2), 10)
-    cv.imwrite("image_gaussien_"+image_name, newImg)
+    def substract_background(self):
+        """ soustraction de fond """
+        substract = abs(self.background - self.current_state) #soustraction de fond
+        new_name = "soustraction.jpg"
+        cv.imwrite(new_name, substract) # enregistrement
+        self.current_state = substract # association
+        #self.processed.append(substract)
 
-#lighting_image("mini_cooper_triangle.png")
-#lighting_image("mini_cooper_fleche.png")
-#open_an_image("mini_cooper_triangle.png")
+    def filtering(self, methode): # OK mais à appliquer sur une image bruité
+        """ Filtrage Median ou Moyen ou Gaussien """
+        # methode = 0 pour Filtrage moyen
+        # methode = 1 pour Filtrage median
+        # methode = 2 pour Filtrage gaussien
+        if methode == 1:
+            new = cv.medianBlur(self.current_state,5) # Filtre Median
+        elif methode == 2:
+            new = cv.GaussianBlur(self.current_state, (9, 9), cv.BORDER_DEFAULT) # Filtre Gaussien
+        else:
+            new = cv.blur(self.current_state,(5,5)) # Filtre Moyen
+        new_name = "filtrage.jpg"
+        cv.imwrite(new_name, new) # enregistrement
+        self.processed.append(new)
 
-##################################################################################################
-##################################################################################################
+    def lighting_image(self, m, M):  # a tester sur les valeurs de m et M
+        """ Traitement de l'intensité de lumière sur l'image + Seuillage """
+        minV, maxV = m, M # intervalle de valeurs pour la "brillance" de la couleur
+        image_hsv = cv.cvtColor(self.current_state,cv.COLOR_BGR2HSV) # passage en hsv
+        ret,seuil = cv.threshold(image_hsv[:,:,2],minV,maxV,cv.THRESH_BINARY)  # seuillage sur la brillance
+        self.current_state = seuil
+        new_name = "luminance.jpg"
+        cv.imwrite(new_name, seuil) # enregistrement image
+        #self.processed.append(self.current_state)
 
-# DETECTION DES FORMES
+    def match_de_template(self):
+        template = cv.imread(self.templates[0])
+        result = cv.matchTemplate(self.current_state, template, cv.TM_SQDIFF_NORMED)
+        position_of_template = (255 * result / result.max()).astype(np.uint8)
+        cv.imwrite("position_template.jpg", position_of_template) # NON TESTABLE
 
-def detecting_edges(image_name):
-    image = cv.imread(image_name)
-    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    ret,thresh = cv.threshold(gray, 240, 255, cv.THRESH_BINARY_INV)
-    contours,h = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    shape = "None"
-    print("Nombre de contours :",len(contours))
-    for cnt in contours:
-        perimetre=cv.arcLength(cnt,True)
-        approx = cv.approxPolyDP(cnt,0.01*perimetre,True)
-        M = cv.moments(cnt)
-        cv.drawContours(image,[cnt],-1,(0,255,0),2)
-        if len(approx)==3: # on détecte une forme triangulaire
-            print("triangle")
-        if len(approx)==7:
-            print("fleche")
+    def Sobel_filter(self): # VRAIMENT PAS BON
 
+        ddepth = cv.CV_16S
+        blur = cv.GaussianBlur(self.current_state, (3, 3), 0)
 
-#detecting_edges("mini_cooper_triangle.png")
-#detecting_edges("mini_cooper_fleche.png")
+        grad_x = cv.Sobel(blur, ddepth, 1, 0, ksize=3, scale=0, delta=1, borderType=cv.BORDER_DEFAULT)
+        grad_y = cv.Sobel(blur, ddepth, 0, 1, ksize=3, scale=0, delta=1, borderType=cv.BORDER_DEFAULT)
+
+        abs_grad_x = cv.convertScaleAbs(grad_x)
+        abs_grad_y = cv.convertScaleAbs(grad_y)
+
+        sobel = cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+        cv.imwrite("sobel.jpg", sobel)
+
+    def canny_processing(self, th1, th2):
+        canny = cv.Canny(self.current_state, th1, th2)
+        cv.imwrite("canny.jpg", canny)
+        self.processed.append(canny)
+
+    def detecting_edges(self): # NE MARCHE PAS ENCORE BIEN
+        copie = cv.bitwise_not(self.current_state)
+        ret,thresh = cv.threshold(copie, 240, 255, cv.THRESH_BINARY_INV)
+        contours,h = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        shape = "None"
+        print("Nombre de contours :",len(contours))
+        for cnt in contours:
+            perimetre = cv.arcLength(cnt,True)
+            approx = cv.approxPolyDP(cnt,0.1*perimetre,True)
+            #print("Nb contours de la forme :", len(approx))
+
+            M = cv.moments(cnt)
+            if (M["m00"]!=0):
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+
+                cv.drawContours(copie,[cnt],-1,(255,0,0),2)
+                if len(approx)==3: # on détecte une forme triangulaire
+                    shape = "triangle"
+                    print("triangle")
+                if len(approx)==7:
+                    shape = "fleche"
+                    print("fleche")
+
+                cv.putText(copie, shape, (cX, cY), cv.FONT_HERSHEY_SIMPLEX,0.5, (255, 255, 255), 2)
+
+        cv.imwrite('copie.jpg',copie)
