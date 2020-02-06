@@ -1,7 +1,10 @@
 HISTORIQUE DES TECHNOS UTILISEES :
-  - Filtrage Médian
-  - Soustraction de fond
+  - Pytesseract et Opencv pour detection des formes + lecture du nom de la voiture ( Pb avec tesseract donc pas d'identification)
+          -> Géolocalisation des véhicules seulement
+  - QR code à tester pour identification après géolocalisation
+  - Seuillage binaire ( variable selon les paramètres d'initialisation )
   
   
 HISTORIQUE DES TECHNOS NON UTILISEES & RAISONS :
   - Filtrage Moyen de l'image très instable ( augmente plus le bruit blanc qu'il ne le diminue )
+  - Soustraction de fond ( Trop sensible au variation de luminosité et notamment les jeux d'ombres )
