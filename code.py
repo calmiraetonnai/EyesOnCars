@@ -111,7 +111,7 @@ class Image_Treatment():
             points = code.polygon #liste des points des quatres coins du code
             data = code.data.decode("utf-8") #data données sur code, data.type pour type du code (QRCODE ou Code barre)
 
-            #lignes suivantes sert aux inscriptions sur l'image
+            #lignes suivantes servent aux inscriptions sur l'image
             pt1 = (min(points[0][0], points[2][0]), min(points[0][1], points[2][1])) #coordonnées coins sup gauche
             pt2 = (max(points[0][0], points[2][0]), max(points[0][1], points[2][1])) #coordonnées coins inf droit
             cv.rectangle(self.current_state, pt1, pt2, (0, 0, 255), 3) #encadre le qr code
