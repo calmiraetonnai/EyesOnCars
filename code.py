@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import pyzbar.pyzbar as pyzbar
 
 class Image_Treatment():
 
@@ -102,3 +103,19 @@ class Image_Treatment():
                 cv.putText(copie, shape, (cX, cY), cv.FONT_HERSHEY_SIMPLEX,0.5, (255, 255, 255), 2)
 
         cv.imwrite('copie.jpg',copie)
+     
+    def Qrcode(self):
+        Codes = pyzbar.decode(self.current_state)#liste contentant les differents codes
+        #traitement pour chaque code
+        for code in Codes:
+            points = code.polygon #liste des points des quatres coins du code
+            data = code.data.decode("utf-8") #data données sur code, data.type pour type du code (QRCODE ou Code barre)
+
+            #lignes suivantes sert aux inscriptions sur l'image
+            pt1 = (min(points[0][0], points[2][0]), min(points[0][1], points[2][1])) #coordonnées coins sup gauche
+            pt2 = (max(points[0][0], points[2][0]), max(points[0][1], points[2][1])) #coordonnées coins inf droit
+            cv.rectangle(self.current_state, pt1, pt2, (0, 0, 255), 3) #encadre le qr code
+            cv.putText(self.current_state, data, (pt1[0], pt2[1] + 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
+        
+
